@@ -1,0 +1,4 @@
+PyYAML==6.0
+imap-tools==1.0.0
+pdfkit==1.0.0
+wkhtmltopdf==0.2

@@ -1,0 +1,21 @@
+gmail:
+  imap_server: "imap.gmail.com"
+  email: "YourEmail@gmail.com"
+  password: "YourPassword"
+
+fetch:
+  label: "paperless"
+  consumed_label: "paperless/consumed"
+  #limit: 10
+  mailboxes:
+  - Inbox
+  - Receipts
+  - Apartment
+  - Work
+  valid_extensions:
+  - "pdf"
+  - "png"
+  - "jpg"
+
+output:
+  paperless_directory: "/tmp/test"
