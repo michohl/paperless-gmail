@@ -2,7 +2,7 @@
 
 import yaml
 import pdfkit
-from imap_tools import MailBox, AND, NOT, MailMessage, Header
+from imap_tools import BaseMailBox, MailBox, AND, NOT, MailMessage, Header
 
 def load_config(file_path: str) -> dict:
     with open(file_path) as f:
@@ -18,7 +18,7 @@ def format_filename(message: MailMessage) -> str:
         "Re: ": "",
         ":": ""
     }
-    
+
     filename = f"{message.subject}--{message.date_str}"
     for char, replacement in substitutions.items():
         filename = filename.replace(char, replacement)
@@ -27,12 +27,13 @@ def format_filename(message: MailMessage) -> str:
 
 # We have a way to "retrace" the thread but because Gmail actually quotes all the previous messages
 # in each message we don't have to build it. We just need to find the last message and save that one instead
-def rebuild_thread(mailbox: MailBox, threads: list, parent_message: MailMessage) -> str:
+def rebuild_thread(mailbox: BaseMailBox, threads: dict, parent_message: MailMessage) -> str:
     html_compatibility = '<meta http-equiv="Content-type" content="text/html; charset=utf-8"/>'
     msg_id = threads.get(parent_message.headers["message-id"])
+    html = ""
     while msg_id:
         headers=Header(name="message-id", value=msg_id[0])
-       
+
         # This should only return one message but fetch returns a generator so we need to "loop"
         for msg in mailbox.fetch(AND(header=headers)):
             html = html_compatibility +  msg.html
@@ -75,7 +76,7 @@ def main():
                         # appears in our threads dictionary that means this is the root node and we can use it
                         # to reverse lookup the last message in the thread which contains all the previous thread information
                         html = rebuild_thread(mailbox, threads, msg)
-                        
+
 
                     # if the file has attachements we should pull a copy of them
                     for attachment in msg.attachments:
@@ -89,13 +90,13 @@ def main():
                     output_location = f"{config['output']['paperless_directory']}/{formatted_filename}.pdf"
                     try:
                         pdfkit.from_string(
-                            str(html), 
-                            output_path=output_location, 
+                            str(html),
+                            output_path=output_location,
                             #options={"enable-local-file-access": None},
                         )
                     except:
                         continue
-                
+
                 # Mark consumed messages so they don't get duplicated repeatedly
                 mailbox.copy(uids, config['fetch']['consumed_label'])
 
